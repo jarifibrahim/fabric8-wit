@@ -109,15 +109,18 @@ func (osioclient *OSIOClient) GetUserServices(ctx context.Context) (*app.UserSer
 	}
 
 	respBody, err := osioclient.responseReader.ReadResponse(resp)
+	if err != nil {
+		return nil, errs.Wrap(err, "failed to read the response from ShowUserService")
+	}
 
 	status := resp.StatusCode
 	if status == http.StatusNotFound {
 		return nil, nil
 	} else if status != http.StatusOK {
 		log.Error(nil, map[string]interface{}{
-			"err":         err,
-			"path":        witclient.ShowUserServicePath(),
-			"http_status": status,
+			"path":          witclient.ShowUserServicePath(),
+			"http_status":   status,
+			"response body": string(respBody),
 		}, "failed to get user service from WIT service due to HTTP error %d", status)
 		return nil, errs.Errorf("failed to GET %s due to status code %d", witclient.ShowUserServicePath(), status)
 	}
